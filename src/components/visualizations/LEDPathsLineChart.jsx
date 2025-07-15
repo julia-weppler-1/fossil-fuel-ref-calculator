@@ -2,10 +2,6 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as XLSX from 'xlsx';
 import * as d3 from 'd3';
 
-/**
- * Zoomable line chart of phaseout trajectories for each country, per fuel, with tooltips.
- * Data source: public/LEDPaths.xlsx
- */
 export default function LEDPathsLineChart({ fuel }) {
   const containerRef = useRef();
   const svgRef       = useRef();
@@ -13,7 +9,6 @@ export default function LEDPathsLineChart({ fuel }) {
   const [dims, setDims]     = useState({ width: 0, height: 0 });
   const [series, setSeries] = useState([]);
 
-  // 1) responsive sizing
   useLayoutEffect(() => {
     const node = containerRef.current;
     if (!node) return;
@@ -25,7 +20,7 @@ export default function LEDPathsLineChart({ fuel }) {
     return () => ro.disconnect();
   }, []);
 
-  // 2) load & parse
+  // load & parse
   useEffect(() => {
     async function load() {
       const res  = await fetch('/LEDPaths.xlsx');
@@ -44,7 +39,7 @@ export default function LEDPathsLineChart({ fuel }) {
     load().catch(console.error);
   }, [fuel]);
 
-  // 3) draw + zoom
+  // draw + zoom
   useEffect(() => {
     const { width, height } = dims;
     if (!width || !height || !series.length) return;
@@ -76,7 +71,7 @@ export default function LEDPathsLineChart({ fuel }) {
     const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // clip for both lines & points
+    // clip lines
     g.append('defs').append('clipPath')
       .attr('id', 'plot-clip')
       .append('rect')
