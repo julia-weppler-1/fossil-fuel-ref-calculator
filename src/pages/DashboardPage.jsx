@@ -7,7 +7,9 @@ import ChartCard from '../components/common/ChartCard';
 import MetricCard from '../components/common/MetricCard';
 import Footer from '../components/layout/Footer';
 import Header from '../components/layout/Header';
-
+import EmissionsScatterChart from '../components/visualizations/EmissionsScatterChart';
+import CapacityPhaseoutChart from '../components/visualizations/CapacityPhaseoutChart';
+import LEDPathsLineChart from '../components/visualizations/LEDPathsLineChart';
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab]   = useState('country');
@@ -20,7 +22,7 @@ export default function DashboardPage() {
   const perCapita       = '4.4';
   const adaptationCost  = '$141';
   const mitigationCost  = '$141';
-
+  const fuels = ['Oil','Gas','Coal'];
   return (
     <div className="flex flex-col h-screen font-body">
       <Header />
@@ -66,20 +68,28 @@ export default function DashboardPage() {
           <div className="p-4 flex-1 overflow-y-auto">
             {activeTab === 'country' && (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                  <ChartCard title="Emissions timeline">
-                    <span>Chart placeholder</span>
-                  </ChartCard>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
+                <ChartCard title="Oil Dependence vs Phaseout" className="h-96">
+                  <EmissionsScatterChart fuel="Oil" />
+                </ChartCard>
 
-                  <ChartCard title="Fair-share breakdown">
-                    <span>Chart placeholder</span>
-                  </ChartCard>
-
-                  <MetricCard
+                <ChartCard title="Gas Dependence vs Phaseout" className="h-96">
+                  <EmissionsScatterChart fuel="Gas" />
+                </ChartCard>
+                <ChartCard title="Coal Dependence vs Phaseout" className="h-96">
+                  <EmissionsScatterChart fuel="Coal" />
+                </ChartCard>
+                <ChartCard title="Capacity Phaseout" className="h-full">
+                    <CapacityPhaseoutChart />
+                </ChartCard>
+                <ChartCard title="LEDPaths Coal" className="h-full">
+                    <LEDPathsLineChart fuel="Coal" />
+                </ChartCard>
+                  {/* <MetricCard
                     title="Per-capita share"
                     value={perCapita}
                     unit=" tCO₂e"
-                  />
+                  /> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
