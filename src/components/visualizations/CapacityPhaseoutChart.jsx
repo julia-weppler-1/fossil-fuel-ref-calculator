@@ -60,19 +60,42 @@ export default function CapacityPhaseoutAll() {
     const years = data.map(d => d.year);
     const caps = data.map(d => d.cap);
     const x0 = d3.scaleLinear().domain([2030, 2050]).range([0, w-5]);
-    const y0 = d3.scaleLinear().domain([0, d3.max(caps)]).nice().range([h-1, 0]);
+    const positiveCaps = caps.filter(c => c > 0);
+    const minCap = d3.min(positiveCaps);
+    const y0 = d3.scalePow()
+      .exponent(0.5)          
+      .domain([0, d3.max(caps)])
+      .range([h-1, 0])
+      .nice();
 
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
-
+    g.append('defs')
+    .append('clipPath')
+    .attr('id','clip')
+    .append('rect')
+    .attr('width', w)
+    .attr('height', h);
+  
+    g.append('defs').append('clipPath').attr('id', 'clip')
+      .append('rect').attr('width', w).attr('height', h);
     // axes groups
     const xAxisG = g.append('g').attr('transform', `translate(0,${h})`);
     const yAxisG = g.append('g');
-
+    
     function drawAxes(xScale, yScale) {
+      let ticks = yScale.ticks(6);
+
+      // 2) merge in your extras
+      ticks = Array.from(new Set([ ...ticks, 2500, 5000 ]));
+    
+      // 3) drop any outside the *visible* domain
+      const [y0, y1] = yScale.domain();    // [min,max] after zoom
+      ticks = ticks.filter(v => v >= y0 && v <= y1).sort((a,b)=>a-b);
       xAxisG.call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.format('d')))
         .call(g => g.selectAll('path, line').attr('stroke', '#333'))
         .call(g => g.selectAll('text').attr('fill', '#333'));
-      yAxisG.call(d3.axisLeft(yScale).ticks(6).tickFormat(d3.format(',d')))
+      yAxisG.call(d3.axisLeft(yScale).tickValues(ticks)
+        .tickFormat(d3.format(',d')))
         .call(g => g.selectAll('path, line').attr('stroke', '#333'))
         .call(g => g.selectAll('text').attr('fill', '#333'));
     }
@@ -90,11 +113,30 @@ export default function CapacityPhaseoutAll() {
       .attr('x', -h / 2).attr('y', -margin.left + 15)
       .attr('text-anchor', 'middle').attr('fill', '#333')
       .text('Capacity per Capita');
-
-    // plot group
+    const avgCap = d3.mean(data, d => d.cap);           
     const plot = g.append('g').attr('clip-path', 'url(#clip)');
-    g.append('defs').append('clipPath').attr('id', 'clip')
-      .append('rect').attr('width', w).attr('height', h);
+
+    // draw global average line
+    plot.append('line')
+      .attr('class','avg-line')                                      
+      .attr('x1', 0).attr('x2', w)
+      .attr('y1', y0(avgCap)).attr('y2', y0(avgCap))
+      .attr('stroke', '#93bcc0')
+      .style('stroke-width', 2)
+      .style('pointer-events','all')              
+      .on('mouseover', (e) =>                   
+        tooltip
+        .style('opacity', 1)
+        .html('Global average capacity‑per‑capita'))
+      .on('mousemove', (e) => {                
+        const r = containerRef.current.getBoundingClientRect();
+        tooltip.style('left',  `${e.clientX - r.left + 10}px`)
+        .style('top',   `${e.clientY - r.top  + 10}px`);
+      })
+      .on('mouseout', () =>                       
+        tooltip.style('opacity', 0)
+      );
+
 
     // points
     const circles = plot.selectAll('circle').data(data).join('circle')
@@ -119,6 +161,8 @@ export default function CapacityPhaseoutAll() {
         const zy = transform.rescaleY(y0);
         drawAxes(zx, zy);
         circles.attr('cx', d => zx(d.year)).attr('cy', d => zy(d.cap));
+        g.select('.avg-line').attr('y1', zy(avgCap)).attr('y2', zy(avgCap));
+        plot.select('avg-line').attr('y1', zy(avgCap)).attr('y2', zy(avgCap));
       });
 
     svg.call(zoom);

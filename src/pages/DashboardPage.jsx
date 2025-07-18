@@ -85,6 +85,12 @@ export default function DashboardPage() {
                 <ChartCard title="LEDPaths Coal" className="h-full">
                     <LEDPathsLineChart fuel="Coal" />
                 </ChartCard>
+                <ChartCard title="LEDPaths Gas" className="h-full">
+                    <LEDPathsLineChart fuel="Gas" />
+                </ChartCard>
+                <ChartCard title="LEDPaths Oil" className="h-full">
+                    <LEDPathsLineChart fuel="Oil" />
+                </ChartCard>
                   {/* <MetricCard
                     title="Per-capita share"
                     value={perCapita}

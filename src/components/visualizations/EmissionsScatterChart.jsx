@@ -135,12 +135,12 @@ export default function EmissionsScatterChart({ fuel }) {
 
     // Zoom
     const zoom = d3.zoom()
-      .scaleExtent([1,8])
+      .scaleExtent([1,10])
       .translateExtent([[0,0],[w,h]])
       .extent([[0,0],[w,h]])
       .on('zoom',({transform})=>{
         const zx = transform.rescaleX(x);
-        const zy = transform.rescaleY(y).domain([0,globalMax]);
+        const zy = transform.rescaleY(y);
         xAxisG.call(d3.axisBottom(zx).ticks(7).tickFormat(d3.format('d')))
           .call(g=>g.selectAll('path, line').attr('stroke','#333'))
           .call(g=>g.selectAll('text').attr('fill','#333'));
@@ -150,7 +150,9 @@ export default function EmissionsScatterChart({ fuel }) {
         plot.selectAll('circle')
           .attr('cx',d=>zx(d.year)).attr('cy',d=>zy(d.value));
         plot.selectAll('line')
-          .attr('x1',zx(2050)).attr('x2',zx(2050));
+          .attr('x1',zx(2050)).attr('x2',zx(2050))
+          .attr('y1', zy(0))     // bottom
+          .attr('y2', zy(globalMax)); // top
       });
     svg.call(zoom);
   }, [allData, data, fuel, dimensions]);
