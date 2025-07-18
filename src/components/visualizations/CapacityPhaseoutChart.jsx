@@ -84,11 +84,7 @@ export default function CapacityPhaseoutAll() {
     
     function drawAxes(xScale, yScale) {
       let ticks = yScale.ticks(6);
-
-      // 2) merge in your extras
       ticks = Array.from(new Set([ ...ticks, 2500, 5000 ]));
-    
-      // 3) drop any outside the *visible* domain
       const [y0, y1] = yScale.domain();    // [min,max] after zoom
       ticks = ticks.filter(v => v >= y0 && v <= y1).sort((a,b)=>a-b);
       xAxisG.call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.format('d')))
