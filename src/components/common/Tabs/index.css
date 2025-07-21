@@ -1,0 +1,15 @@
+.tab-container {
+    @apply flex bg-orange-600 text-white overflow-x-auto;
+}
+
+.tab-title {
+    @apply px-6 py-3 whitespace-nowrap text-sm font-medium;
+}
+
+.active-title {
+    @apply bg-white text-orange-600 border-b-4 border-orange-600;
+}
+
+.hover-title {
+    @apply hover:bg-orange-500;
+}

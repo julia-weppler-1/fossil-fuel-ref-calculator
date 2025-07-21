@@ -1,8 +1,8 @@
 import React from 'react';
-
+import './index.css'
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-200 pt-4 text-center text-[10px] text-gray-500">
+    <footer className="footer-container">
       Data version: <span className="font-medium">7.4</span> (last change 12 Nov 2024)…  
       <span className="mx-1">|</span>  
       Calculator version: <span className="font-medium">3.0.1</span>

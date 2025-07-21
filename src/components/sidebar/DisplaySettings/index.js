@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import { ParametersContext } from '../../context/ParametersContext';
-
+import { ParametersContext } from '../../../context/ParametersContext';
+import ResetButton from '../ResetButton';
+import './index.css'
 const mitigationOptions = [
   { id: 1, label: 'Low Energy Demand Scenario' },
   { id: 2, label: 'High Energy Demand Scenario' },
@@ -19,18 +20,18 @@ export default function DisplaySettings() {
   const wJobs = parameters.weightJobs ?? 34;
 
   return (
-    <section className="mb-6 font-body">
-      <h2 className="flex items-center bg-brand text-white text-sm font-bold uppercase px-4 py-2 rounded-t-lg">
+    <section className="mb-2 font-body">
+      <h2 className="parameters-header">
         ▼ Input Selection
       </h2>
-      <div className="bg-white border border-gray-200 rounded-b-lg shadow-sm p-4 space-y-4">
+      <div className="parameters-container">
         {/* Mitigation Pathway / Carbon Budget */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="parameter-name">
             Mitigation Pathway / Carbon Budget
           </label>
           <select
-            className="form-select block w-full rounded-md border-gray-300 focus:border-brand focus:ring focus:ring-brand/20"
+            className="parameter-input-dropdown"
             value={parameters.mitigationPathwayId ?? mitigationOptions[0].id}
             onChange={e =>
               setParameters(p => ({ ...p, mitigationPathwayId: +e.target.value }))
@@ -46,14 +47,14 @@ export default function DisplaySettings() {
 
         {/* Earliest Phaseout Year */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="parameter-name">
             Earliest Phaseout Year
           </label>
           <input
             type="number"
             min={new Date().getFullYear()}
             max="2100"
-            className="form-input block w-full rounded-md border-gray-300 focus:border-brand focus:ring focus:ring-brand/20"
+            className="parameter-input"
             value={parameters.earliestPhaseoutYear ?? 2030}
             onChange={e =>
               setParameters(p => ({ ...p, earliestPhaseoutYear: +e.target.value }))
@@ -63,14 +64,14 @@ export default function DisplaySettings() {
 
         {/* Latest Phaseout Year */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="parameter-name">
             Latest Phaseout Year
           </label>
           <input
             type="number"
             min={parameters.earliestPhaseoutYear ?? 2030}
             max="2100"
-            className="form-input block w-full rounded-md border-gray-300 focus:border-brand focus:ring focus:ring-brand/20"
+            className="parameter-input"
             value={parameters.latestPhaseoutYear ?? 2050}
             onChange={e =>
               setParameters(p => ({ ...p, latestPhaseoutYear: +e.target.value }))
@@ -80,7 +81,7 @@ export default function DisplaySettings() {
 
         {/* Phaseout Threshold */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="parameter-name">
             Phaseout Threshold (%)
           </label>
           <input
@@ -88,7 +89,7 @@ export default function DisplaySettings() {
             min="80"
             max="100"
             step="1"
-            className="form-input block w-full rounded-md border-gray-300 focus:border-brand focus:ring focus:ring-brand/20"
+            className="parameter-input"
             value={parameters.phaseoutThreshold ?? 90}
             onChange={e =>
               setParameters(p => ({ ...p, phaseoutThreshold: +e.target.value }))
@@ -98,11 +99,11 @@ export default function DisplaySettings() {
 
         {/* Scaling of Dependence by Capacity */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="parameter-name">
             Scaling of Dependence by Capacity
           </label>
           <select
-            className="form-select block w-full rounded-md border-gray-300 focus:border-brand focus:ring focus:ring-brand/20"
+            className="parameter-input-dropdown"
             value={parameters.scalingOption ?? scalingOptions[0]}
             onChange={e =>
               setParameters(p => ({ ...p, scalingOption: e.target.value }))
@@ -118,20 +119,20 @@ export default function DisplaySettings() {
 
         {/* Weighting of Dependence Elements */}
         <div>
-          <label className="block text-s font-medium text-gray-700 mb-1">
+          <label className="parameter-name">
             Weightings
           </label>
-          <div className="grid grid-cols-3 gap-4 items-end">
+          <div className="weights-layout">
             {/* Domestic Energy */}
-            <div className="flex flex-col items-center">
-              <label className="text-xs text-center text-gray-600 mb-1 whitespace-normal">
+            <div className="weight-item">
+              <label className="weight-title">
                 Domestic Energy (%)
               </label>
               <input
                 type="number"
                 min="0"
                 max="100"
-                className="form-input block w-full rounded-md border-gray-300 text-center focus:border-brand focus:ring focus:ring-brand/20"
+                className="weight-input"
                 value={wDom}
                 onChange={e => {
                   const newDom = +e.target.value;
@@ -142,15 +143,15 @@ export default function DisplaySettings() {
             </div>
 
             {/* Government Revenue */}
-            <div className="flex flex-col items-center">
-              <label className="text-xs text-center text-gray-600 mb-1 whitespace-normal">
+            <div className="weight-item">
+              <label className="weight-title">
                 Government Revenue (%)
               </label>
               <input
                 type="number"
                 min="0"
                 max="100"
-                className="form-input block w-full rounded-md border-gray-300 text-center focus:border-brand focus:ring focus:ring-brand/20"
+                className="weight-input"
                 value={wRev}
                 onChange={e => {
                   const newRev = +e.target.value;
@@ -161,15 +162,15 @@ export default function DisplaySettings() {
             </div>
 
             {/* Jobs */}
-            <div className="flex flex-col items-center">
-              <label className="text-xs text-center text-gray-600 mb-1 whitespace-normal">
+            <div className="weight-item">
+              <label className="weight-title">
                 Jobs (%)
               </label>
               <input
                 type="number"
                 min="0"
                 max="100"
-                className="form-input block w-full rounded-md border-gray-300 text-center focus:border-brand focus:ring focus:ring-brand/20"
+                className="weight-input"
                 value={wJobs}
                 onChange={e => {
                   const newJobs = +e.target.value;
@@ -181,16 +182,14 @@ export default function DisplaySettings() {
           </div>
         </div>
 
-
-
         {/* Advanced Options */}
         <details className="group">
-          <summary className="flex items-center justify-between cursor-pointer bg-brand-light text-brand px-3 py-2 text-xs font-medium rounded-md">
+          <summary className="advanced-dropdown">
             Advanced Input Options
           <span className="transform group-open:rotate-180 transition">⌄</span>
           </summary>
-          <div className="mt-2 space-y-2">
-            <label className="inline-flex items-center text-xs">
+          <div className="options-container">
+            <label className="dropdown-item">
               <input
                 type="checkbox"
                 className="form-checkbox"
@@ -205,6 +204,7 @@ export default function DisplaySettings() {
           </div>
         </details>
       </div>
+      <ResetButton/>
     </section>
   );
 }

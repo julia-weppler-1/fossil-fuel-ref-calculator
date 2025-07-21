@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as XLSX from 'xlsx';
 import * as d3 from 'd3';
-
+import './index.css';
+import Tooltip from '../../common/Tooltip';
 export default function CapacityPhaseoutAll() {
   const containerRef = useRef();
   const svgRef = useRef();
@@ -165,22 +166,9 @@ export default function CapacityPhaseoutAll() {
   }, [dims, data]);
 
   return (
-    <div ref={containerRef} style={{ position:'relative', width:'100%', height:'100%' }}>
-      <svg ref={svgRef} style={{ width:'100%', height:'100%' }} />
-      <div
-        ref={tooltipRef}
-        style={{
-          position: 'absolute',
-          background: 'white',
-          padding: '4px 8px',
-          border: 'none',
-          borderRadius: 0,
-          pointerEvents: 'none',
-          opacity: 0,
-          fontSize: '12px',
-          color: '#333'
-        }}
-      />
+    <div ref={containerRef} className="capacity-chart-container">
+      <svg ref={svgRef}       className="capacity-chart-svg" />
+      <Tooltip ref={tooltipRef}/>
     </div>
   );
 }

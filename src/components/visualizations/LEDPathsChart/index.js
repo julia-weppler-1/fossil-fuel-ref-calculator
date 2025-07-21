@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as XLSX from 'xlsx';
 import * as d3 from 'd3';
-
-export default function LEDPathsLineChart({ fuel }) {
+import Tooltip from '../../common/Tooltip';
+export default function LEDPathsChart({ fuel }) {
   const containerRef = useRef();
   const svgRef       = useRef();
   const tooltipRef   = useRef();
@@ -169,20 +169,7 @@ export default function LEDPathsLineChart({ fuel }) {
   return (
     <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '100%' }}>
       <svg    ref={svgRef}    style={{ width: '100%', height: '100%' }} />
-      <div
-        ref={tooltipRef}
-        style={{
-          position: 'absolute',
-          background: 'white',
-          padding: '4px 8px',
-          border: 'none',
-          borderRadius: 0,
-          pointerEvents: 'none',
-          opacity: 0,
-          fontSize: '12px',
-          color: '#333'
-        }}
-      />
+      <Tooltip ref={tooltipRef} />
     </div>
   );
 }

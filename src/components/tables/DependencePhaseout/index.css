@@ -1,0 +1,33 @@
+.dp-container { 
+    @apply bg-white border border-gray-200 rounded-lg shadow-sm p-4; 
+}
+.dp-header    { 
+    @apply flex items-center justify-between mb-4; 
+}
+.dp-title     { 
+    @apply text-lg font-semibold text-gray-700; 
+}
+.dp-select    { 
+    @apply form-select rounded-md border-gray-300; 
+}
+.dp-scroll    { 
+    @apply overflow-auto; 
+}
+.dp-table     { 
+    @apply min-w-full divide-y divide-gray-200 text-sm; 
+}
+.dp-thead     { 
+    @apply bg-gray-50; 
+}
+.dp-th        { 
+    @apply px-4 py-2 text-left font-medium text-gray-600; 
+}
+.dp-tbody     { 
+    @apply divide-y divide-gray-100; 
+}
+.dp-row       { 
+    @apply hover:bg-gray-50; 
+}
+.dp-td        { 
+    @apply px-4 py-2 text-gray-700; 
+}

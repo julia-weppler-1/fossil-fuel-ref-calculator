@@ -1,0 +1,11 @@
+.card-container {
+    @apply bg-white border border-gray-200 rounded-lg shadow-sm p-4 flex flex-col justify-center items-center;
+}
+
+.card-title {
+    @apply text-sm font-medium text-gray-500 mb-2;
+}
+
+.metric-container {
+    @apply text-3xl font-bold text-green-700;
+}
