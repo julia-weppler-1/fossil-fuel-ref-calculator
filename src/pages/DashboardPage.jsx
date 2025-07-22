@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import DisplaySettings from '../components/sidebar/DisplaySettings';
-import ResetButton from '../components/sidebar/ResetButton';
 import Tabs from '../components/common/Tabs';
 import ChartCard from '../components/common/ChartCard';
 import MetricCard from '../components/common/MetricCard';
@@ -12,18 +12,49 @@ import LEDPathsChart from '../components/visualizations/LEDPathsChart';
 import DependencePhaseout from '../components/tables/DependencePhaseout';
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab]   = useState('global');
-
+  const [activeTab, setActiveTab]   = useState('country');
+  const [countryOptions, setCountryOptions]       = useState([]);      // all countries
+  const [filterText, setFilterText]               = useState('');      // search input
+  const [selectedCountries, setSelectedCountries] = useState([]);      // multi‑select
   const tabs = [
-    { id: 'global',  label: 'Global overview' },
-    { id: 'country', label: 'Country report' }
-    
+    { id: 'country', label: 'Country report' },
+    { id: 'global',  label: 'Global overview' }
   ];
+   // 1a) Load the list of countries from your LEDPaths.xlsx
+ useEffect(() => {
+   async function loadCountries() {
+     const res = await fetch('/LEDPaths.xlsx');
+     const buf = await res.arrayBuffer();
+     const wb  = XLSX.read(buf, { type: 'array' });
+     const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+     // assume first column is country name
+     const all = raw.slice(1).map(r => r[0]).filter(Boolean);
+     setCountryOptions(Array.from(new Set(all)).sort());
+   }
+   loadCountries().catch(console.error);
+ }, []);
+   // helper to add a country
+   const addCountry = country => {
+    if (!selectedCountries.includes(country)) {
+      setSelectedCountries([...selectedCountries, country]);
+    }
+    setFilterText('');
+  };
 
-  const perCapita       = '4.4';
-  const adaptationCost  = '$141';
-  const mitigationCost  = '$141';
-  const fuels = ['Oil','Gas','Coal'];
+
+
+  // helper to remove a country
+  const removeCountry = country => {
+    setSelectedCountries(selectedCountries.filter(c => c !== country));
+  };
+
+  // filtered dropdown list (exclude already selected)
+  const suggestions = countryOptions
+    .filter(c => 
+      c.toLowerCase().includes(filterText.toLowerCase()) &&
+      !selectedCountries.includes(c)
+    )
+    .slice(0, 10); // limit to first 10 matches
   return (
     <div className="flex flex-col h-screen font-body">
       <Header />
@@ -60,39 +91,85 @@ export default function DashboardPage() {
         <main className="flex-1 flex flex-col bg-panelBg overflow-auto">
           <Tabs tabs={tabs} activeTab={activeTab} onTabClick={setActiveTab} />
           <div className="p-4 flex-1 overflow-y-auto">
-            {activeTab === 'global' && (
+            {activeTab === 'country' && (
               <>
+                <div className="mb-6 relative">
+                  <label className="block text-sm text-gray-700">
+                    Filter by Country
+                  </label>
+                  {/* Chips */}
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedCountries.map(country => (
+                      <span
+                        key={country}
+                        className="flex items-center bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                      >
+                        {country}
+                        <button
+                          onClick={() => removeCountry(country)}
+                          className="ml-1 focus:outline-none"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    {selectedCountries.length > 1 && (
+                      <button
+                        onClick={() => setSelectedCountries([])}
+                        className="text-xs text-red-600 hover:underline ml-2"
+                      >
+                        Clear All
+                       </button>
+                    )}
+                  </div>
+
+                  {/* Search input */}
+                  <input
+                    type="text"
+                    placeholder={selectedCountries.length ? "Add another..." : "Search countries..."}
+                    className="form-input block w-full rounded-md border-gray-300 focus:border-brand text-xs focus:ring focus:ring-brand/20"
+                    value={filterText}
+                    onChange={e => setFilterText(e.target.value)}
+                  />
+
+                  {/* Dropdown suggestions */}
+                  {filterText && suggestions.length > 0 && (
+                    <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-sm max-h-40 overflow-y-auto">
+                      {suggestions.map(country => (
+                        <li
+                          key={country}
+                          onClick={() => addCountry(country)}
+                          className="cursor-pointer px-3 py-2 hover:bg-gray-100 text-sm"
+                        >
+                          {country}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
-                <ChartCard title="Oil Dependence vs Phaseout" className="h-96">
-                  <EmissionsScatterChart fuel="Oil" />
+                <ChartCard title="Oil Dependence vs Phaseout">
+                  <EmissionsScatterChart fuel="Oil" countries={selectedCountries}/>
                 </ChartCard>
 
-                <ChartCard title="Gas Dependence vs Phaseout" className="h-96">
-                  <EmissionsScatterChart fuel="Gas" />
+                <ChartCard title="Gas Dependence vs Phaseout" >
+                  <EmissionsScatterChart fuel="Gas" countries={selectedCountries}/>
                 </ChartCard>
-                <ChartCard title="Coal Dependence vs Phaseout" className="h-96">
-                  <EmissionsScatterChart fuel="Coal" />
+                <ChartCard title="Coal Dependence vs Phaseout">
+                  <EmissionsScatterChart fuel="Coal" countries={selectedCountries}/>
                 </ChartCard>
-                <ChartCard title="Capacity Phaseout" className="h-full">
-                    <CapacityPhaseoutChart />
+                <ChartCard title="LEDPaths Coal">
+                    <LEDPathsChart fuel="Coal" countries={selectedCountries}/>
                 </ChartCard>
-                <ChartCard title="LEDPaths Coal" className="h-full">
-                    <LEDPathsChart fuel="Coal" />
+                <ChartCard title="LEDPaths Gas">
+                    <LEDPathsChart fuel="Gas" countries={selectedCountries}/>
                 </ChartCard>
-                <ChartCard title="LEDPaths Gas" className="h-full">
-                    <LEDPathsChart fuel="Gas" />
+                <ChartCard title="LEDPaths Oil">
+                    <LEDPathsChart fuel="Oil" countries={selectedCountries}/>
                 </ChartCard>
-                <ChartCard title="LEDPaths Oil" className="h-full">
-                    <LEDPathsChart fuel="Oil" />
-                </ChartCard>
-                  {/* <MetricCard
-                    title="Per-capita share"
-                    value={perCapita}
-                    unit=" tCO₂e"
-                  /> */}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <MetricCard
                     title="Adaptation cost"
                     value={adaptationCost}
@@ -103,15 +180,21 @@ export default function DashboardPage() {
                     value={mitigationCost}
                     unit=""
                   />
-                </div>
-                <DependencePhaseout></DependencePhaseout>
+                </div> */}
+                <DependencePhaseout countries={selectedCountries}></DependencePhaseout>
               </>
             )}
 
-            {activeTab === 'country' && (
-              <div className="text-gray-500 text-center py-16">
-                Country report coming soon…
-              </div>
+            {activeTab === 'global' && (
+              <>
+              <h2 className="text-xl font-semibold text-gray-700 my-4 mx-3">
+                Global Capacity Phase‑out
+              </h2>
+                  <div className="p-4 flex-1">
+                    <CapacityPhaseoutChart />
+                  </div>
+
+              </>
             )}
           </div>
           <Footer />

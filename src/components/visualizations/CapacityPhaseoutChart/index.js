@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import * as d3 from 'd3';
 import './index.css';
 import Tooltip from '../../common/Tooltip';
-export default function CapacityPhaseoutAll() {
+export default function CapacityPhaseoutChart() {
   const containerRef = useRef();
   const svgRef = useRef();
   const tooltipRef = useRef();
@@ -89,12 +89,12 @@ export default function CapacityPhaseoutAll() {
       const [y0, y1] = yScale.domain();    // [min,max] after zoom
       ticks = ticks.filter(v => v >= y0 && v <= y1).sort((a,b)=>a-b);
       xAxisG.call(d3.axisBottom(xScale).ticks(5).tickFormat(d3.format('d')))
-        .call(g => g.selectAll('path, line').attr('stroke', '#333'))
-        .call(g => g.selectAll('text').attr('fill', '#333'));
+        .call(g => g.selectAll('path, line').attr('stroke', '#1F2937'))
+        .call(g => g.selectAll('text').attr('fill', '#4B5563'));
       yAxisG.call(d3.axisLeft(yScale).tickValues(ticks)
         .tickFormat(d3.format(',d')))
-        .call(g => g.selectAll('path, line').attr('stroke', '#333'))
-        .call(g => g.selectAll('text').attr('fill', '#333'));
+        .call(g => g.selectAll('path, line').attr('stroke', '#1F2937'))
+        .call(g => g.selectAll('text').attr('fill', '#4B5563'));
     }
 
     // initial axes
@@ -103,12 +103,12 @@ export default function CapacityPhaseoutAll() {
     // labels
     g.append('text')
       .attr('x', w / 2).attr('y', h + margin.bottom - 15)
-      .attr('text-anchor', 'middle').attr('fill', '#333')
+      .attr('text-anchor', 'middle').attr('fill', '#1F2937')
       .text('Phaseout Year');
     g.append('text')
       .attr('transform', 'rotate(-90)')
       .attr('x', -h / 2).attr('y', -margin.left + 15)
-      .attr('text-anchor', 'middle').attr('fill', '#333')
+      .attr('text-anchor', 'middle').attr('fill', '#1F2937')
       .text('Capacity per Capita');
     const avgCap = d3.mean(data, d => d.cap);           
     const plot = g.append('g').attr('clip-path', 'url(#clip)');
@@ -118,7 +118,7 @@ export default function CapacityPhaseoutAll() {
       .attr('class','avg-line')                                      
       .attr('x1', 0).attr('x2', w)
       .attr('y1', y0(avgCap)).attr('y2', y0(avgCap))
-      .attr('stroke', '#93bcc0')
+      .attr('stroke', '#3F6F2A')
       .style('stroke-width', 2)
       .style('pointer-events','all')              
       .on('mouseover', (e) =>                   
@@ -140,7 +140,7 @@ export default function CapacityPhaseoutAll() {
       .attr('cx', d => x0(d.year))
       .attr('cy', d => y0(d.cap))
       .attr('r', 4)
-      .attr('fill', '#1f77b4')
+      .attr('fill', '#4659C0')
       .on('mouseover', (e, d) => tooltip.style('opacity', 1).html(d.country))
       .on('mousemove', e => {
         const r = containerRef.current.getBoundingClientRect();

@@ -14,7 +14,7 @@ export default function LEDPathsChart({ fuel }) {
     if (!node) return;
     const ro = new ResizeObserver(([e]) => {
       const w = e.contentRect.width;
-      setDims({ width: w, height: w * 0.75 });
+      setDims({ width: w, height: 0.875 * w });
     });
     ro.observe(node);
     return () => ro.disconnect();

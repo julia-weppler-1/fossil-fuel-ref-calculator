@@ -80,21 +80,37 @@ export default function DisplaySettings() {
         </div>
 
         {/* Phaseout Threshold */}
-        <div>
-          <label className="parameter-name">
-            Phaseout Threshold (%)
-          </label>
-          <input
-            type="number"
-            min="80"
-            max="100"
-            step="1"
-            className="parameter-input"
-            value={parameters.phaseoutThreshold ?? 90}
-            onChange={e =>
-              setParameters(p => ({ ...p, phaseoutThreshold: +e.target.value }))
-            }
-          />
+        <div className="mb-4">
+            <div className="flex items-center justify-between">
+                <label className="parameter-name flex items-center">
+                Phaseout Threshold:
+                <span className="ml-2 font-semibold text-gray-700">
+                    {parameters.phaseoutThreshold ?? 90}%
+                </span>
+                </label>
+            </div>
+            <input
+                type="range"
+                min="80"
+                max="100"
+                step="1"
+                className="w-full h-1 bg-gray-200 rounded-lg appearance-none parameter-input-range accent-accentBlue"
+                value={parameters.phaseoutThreshold ?? 90}
+                onChange={e =>
+                setParameters(p => ({
+                    ...p,
+                    phaseoutThreshold: +e.target.value
+                }))
+                }
+                style={{
+                    background: `linear-gradient(
+                      to right,
+                      #4659c0  ${( (parameters.phaseoutThreshold ?? 90) - 80 ) / (100 - 80) * 100 }%,
+                      #E5E7EB  ${( (parameters.phaseoutThreshold ?? 90) - 80 ) / (100 - 80) * 100 }%
+                    )`
+                  }}
+            />
+
         </div>
 
         {/* Scaling of Dependence by Capacity */}
@@ -120,13 +136,13 @@ export default function DisplaySettings() {
         {/* Weighting of Dependence Elements */}
         <div>
           <label className="parameter-name">
-            Weightings
+            Weightings (%)
           </label>
           <div className="weights-layout">
             {/* Domestic Energy */}
             <div className="weight-item">
               <label className="weight-title">
-                Domestic Energy (%)
+                Domestic Energy
               </label>
               <input
                 type="number"
@@ -145,7 +161,7 @@ export default function DisplaySettings() {
             {/* Government Revenue */}
             <div className="weight-item">
               <label className="weight-title">
-                Government Revenue (%)
+                Government Revenue
               </label>
               <input
                 type="number"
@@ -164,7 +180,7 @@ export default function DisplaySettings() {
             {/* Jobs */}
             <div className="weight-item">
               <label className="weight-title">
-                Jobs (%)
+                Jobs
               </label>
               <input
                 type="number"

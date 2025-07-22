@@ -9,12 +9,12 @@ export default function Header() {
         <div className="header-components">
           <img
             src="/logo512.png"
-            alt="Climate Equity Reference"
+            alt="Climate Equity Reference Calculator"
             className="h-8 w-auto md:h-10"
           />
           <div>
             <div className="app-title">
-              Climate Equity Reference
+            EQUITABLE PHASEOUT OF FOSSIL FUEL EXTRACTION
             </div>
             <div className="app-title-blue">
               Calculator
@@ -45,15 +45,6 @@ export default function Header() {
             Online Documentation, Glossary, Help
           </a>
         </nav>
-
-        <div className="main-logos">
-          <img src="/logo512.png" alt="EcoEquity" className="main-logo" />
-          <img
-            src="/logo512.png"
-            alt="Stockholm Environment Institute"
-            className="main-logo"
-          />
-        </div>
       </div>
 
       {menuOpen && (

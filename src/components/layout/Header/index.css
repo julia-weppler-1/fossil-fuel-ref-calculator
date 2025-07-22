@@ -3,8 +3,13 @@
 }
 
 .items-layout {
-    @apply max-w-screen-xl mx-auto flex items-center justify-between px-6 py-3 md:py-4;
-}
+    @apply w-full max-w-screen-xl mx-5;
+  
+    @apply flex items-center justify-start;
+    
+    @apply px-2 py-3 md:py-4;
+  }
+  
 
 .header-components {
     @apply flex items-center space-x-3;
@@ -49,5 +54,5 @@
 }
 
 .menu-items {
-    @apply hidden md:flex flex-1 mx-6 space-x-6 text-sm text-blue-600;
+    @apply hidden md:flex space-x-6 text-sm text-blue-600;
 }
