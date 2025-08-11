@@ -1,25 +1,19 @@
 import React, { useState } from 'react';
 import './index.css';
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header className="header-container">
       <div className="items-layout">
+        {/* Logo only */}
         <div className="header-components">
           <img
-            src="/logo512.png"
-            alt="Climate Equity Reference Calculator"
-            className="h-8 w-auto md:h-10"
+            src="/F3-EPO.png"
+            alt="F-3EPO Calculator"
+            className="h-16 w-auto md:h-20 mr-10"
           />
-          <div>
-            <div className="app-title">
-            EQUITABLE PHASEOUT OF FOSSIL FUEL EXTRACTION
-            </div>
-            <div className="app-title-blue">
-              Calculator
-            </div>
-          </div>
         </div>
 
         <button
@@ -50,30 +44,21 @@ export default function Header() {
       {menuOpen && (
         <div className="mobile-menu-items">
           <div className="mobile-menu-layout">
-            <a
-              href="/project"
-              className="header-item"
-            >
+            <a href="/project" className="header-item">
               About the Climate Equity Reference Project
             </a>
-            <a
-              href="/calculator"
-              className="header-item"
-            >
+            <a href="/calculator" className="header-item">
               About the Climate Equity Reference Calculator
             </a>
-            <a
-              href="/docs"
-              className="header-item"
-            >
+            <a href="/docs" className="header-item">
               Online Documentation, Glossary, Help
             </a>
           </div>
+          {/* If you still need mobile logos, swap their src here too, otherwise just remove this block */}
           <div className="mobile-logos">
-            <img src="/logo512.png" alt="EcoEquity" className="mobile-logo" />
             <img
-              src="/logo512.png"
-              alt="Stockholm Environment Institute"
+              src="/F3-EPO.png"
+              alt="F-3EPO Calculator"
               className="mobile-logo"
             />
           </div>

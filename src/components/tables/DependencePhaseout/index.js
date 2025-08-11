@@ -117,13 +117,13 @@ export default function DependencePhaseout() {
         <div className="flex space-x-2">
           <button
             onClick={handleDownloadExcel}
-            className="bg-highlight text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+            className="bg-blue-400 text-white px-2 py-1 rounded text-xs hover:bg-blue-200"
           >
             Download XLSX
           </button>
           <button
             onClick={handleDownloadCSV}
-            className="bg-highlight text-white px-2 py-1 rounded text-xs hover:bg-blue-600"
+            className="bg-blue-400 text-white px-2 py-1 rounded text-xs hover:bg-blue-200"
           >
             Download CSV
           </button>
@@ -170,6 +170,12 @@ export default function DependencePhaseout() {
               >
                 Phaseout Year {sortConfig.key==='phaseout' ? (sortConfig.direction==='asc' ? ' ↑':' ↓') : ''}
               </th>
+              <th rowSpan={2} className="dp-th text-left">
+                Support
+              </th>
+              <th rowSpan={2} className="dp-th text-left">
+                Reduction in 2030 (%)
+              </th>
             </tr>
             <tr>
               {['E','R','J','total'].map(col => (
@@ -192,7 +198,7 @@ export default function DependencePhaseout() {
                 <td className="dp-td">{d.E.toFixed(3)}</td>
                 <td className="dp-td">{d.R.toFixed(3)}</td>
                 <td className="dp-td">{d.J.toFixed(3)}</td>
-                <td className="dp-td">{d.total}</td>
+                <td className="dp-td">{d.total.toFixed(3)}</td>
                 <td className="dp-td">{d.phaseout}</td>
               </tr>
             ))}

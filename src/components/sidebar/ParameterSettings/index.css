@@ -3,7 +3,7 @@
 }
 
 .parameters-container {
-    @apply bg-white border border-gray-200 rounded-b-lg shadow-sm space-y-2;
+    @apply bg-white border border-gray-200 rounded-b-lg shadow-sm p-4 space-y-4;
 }
 
 .parameter-name {

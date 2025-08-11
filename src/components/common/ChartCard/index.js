@@ -35,7 +35,10 @@ export default function ChartCard({ title, children }) {
       const c = document.createElement('canvas');
       c.width  = svgEl.clientWidth;
       c.height = svgEl.clientHeight;
-      c.getContext('2d').drawImage(img, 0, 0);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
       c.toBlob((b) => {
         const link = document.createElement('a');

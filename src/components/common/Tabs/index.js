@@ -10,8 +10,8 @@ export default function Tabs({ tabs, activeTab, onTabClick }) {
           className={`
             tab-title
             ${activeTab === t.id
-              ? 'bg-white text-orange-600 border-b-4 border-orange-600'
-              : 'hover:bg-orange-500'}
+              ? 'active-title'
+              : 'hover-title'}
           `}
         >
           {t.label}
