@@ -14,20 +14,19 @@ Install these on your machine:
   Includes **npm**.
 * **PHP** (8.x recommended)
 
-**PHP extensions** (enable via your PHP installation if not already):
+**PHP extensions** (enable via PHP installation if not already):
 
 * `pdo_sqlite` **or** `sqlite3` (required for the bundled DB file)
 * `mbstring`
-* `json` (usually built in)
-* `curl` (only if your PHP scripts call external APIs)
+* `json` 
 
 ---
 
 ## Clone the repository
 
 ```bash
-git clone <REPO_URL>
-cd <REPO_FOLDER>
+git clone https://github.com/julia-weppler-1/fossil-fuel-ref-calculator.git
+cd fossil-fuel-ref-calculator
 ```
 
 ---
@@ -45,7 +44,6 @@ This pulls everything declared in `package.json`, including:
 * `xlsx`
 * `js-cookie`
 * Tailwind toolchain: `tailwindcss`, `postcss`, `autoprefixer`
-* Your build tool (e.g. `react-scripts` or `vite`) as defined in the repo
 
 ---
 
@@ -72,7 +70,6 @@ npm run start
 
 ## Notes
 
-* Keep the PHP files **and** the database file in the PHP webroot you serve with `-t .` so the backend can find them.
 * The exact frontend URL/port is whatever `npm run start` prints (commonly `http://localhost:3000/`).
 * If you see PHP errors about SQLite, ensure `pdo_sqlite` or `sqlite3` is enabled.
 * If your system blocks one of the ports, pick another free port and re-run the same commands with that port.
