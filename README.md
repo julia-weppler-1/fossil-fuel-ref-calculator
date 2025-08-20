@@ -66,10 +66,13 @@ From the repository root:
 npm run start
 ```
 
----
+### Usage
+
+There is a json file in /public called "PARAM TEST SET.json". This contains 2 testing sets to import and play around with. The dashboards can be used without this saved test set, but the playground will not work without it.
 
 ## Notes
 
+* This repository is still in development. Not all features work yet or are thoroughly tested. More updates coming soon.
 * The exact frontend URL/port is whatever `npm run start` prints (commonly `http://localhost:3000/`).
 * If you see PHP errors about SQLite, ensure `pdo_sqlite` or `sqlite3` is enabled.
 * If your system blocks one of the ports, pick another free port and re-run the same commands with that port.
