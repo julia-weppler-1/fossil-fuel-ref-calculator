@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *'); // tighten in prod
+header('Access-Control-Allow-Origin: *'); 
 
 $dbPath = __DIR__ . '/../data/results.sql3';
 
@@ -22,7 +22,6 @@ try {
 
   // --- resolve result_id ---
   if ($resultArg === 'latest') {
-    // Prefer most recently used, calculated result_id; fall back to max(result_id) present in results_by_fuel
     $ridRow = $pdo->query("
       SELECT result_id
       FROM param_sets
@@ -43,7 +42,6 @@ try {
 
   if ($result_id <= 0) { http_response_code(400); echo json_encode(['error' => 'Invalid or missing result_id']); exit; }
 
-  // --- optional ISO filter ---
   $params = [':rid' => $result_id];
   $isoSQL = '';
   if ($isoList !== '') {

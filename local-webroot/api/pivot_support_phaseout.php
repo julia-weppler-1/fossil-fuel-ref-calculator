@@ -21,7 +21,6 @@ try {
   $fuelParam = trim($_GET['fuel'] ?? 'all');
   $isoList   = trim($_GET['iso3'] ?? '');
 
-  // --- result_id parsing: support single, latest, or comma list ---
   $rids = [];
   if (strpos($resultArg, ',') !== false) {
     foreach (explode(',', $resultArg) as $p) {

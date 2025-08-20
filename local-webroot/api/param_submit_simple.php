@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *'); // tighten in prod
+header('Access-Control-Allow-Origin: *');
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
@@ -177,10 +177,9 @@ try {
   }
 
   // ---------- MATCH (dedupe) ----------
-  // ---------- MATCH (dedupe) ----------
+
 $pdo->beginTransaction();
 
-// canonical ints at 3dp (e.g., 0.333 -> 333, 0.9 -> 900)
 $pth3i = (int)round($phaseout_thr_f * 1000);
 $wd3i  = (int)round($w_dom_f        * 1000);
 $wg3i  = (int)round($w_gov_f        * 1000);
@@ -418,7 +417,6 @@ $existing = $find->fetch();
     if ($capacity_settings_id !== null) {
       $diag->bindValue(':cap', $capacity_settings_id, PDO::PARAM_INT);
     } else {
-      // still bind something to avoid "parameter missing" in literal printing if you log it
       $diag->bindValue(':cap', 0, PDO::PARAM_INT);
     }
     $diag->execute();

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *'); // tighten in prod
+header('Access-Control-Allow-Origin: *'); 
 
 $dbPath = __DIR__ . '/../data/results.sql3';
 
@@ -58,7 +58,7 @@ try {
     if ($x <= 1.0) {
       return round($x, 12);
     }
-    // 0..100% → fraction
+    // 0..100% to fraction
     if ($x <= 100.0) {
       return round($x / 100.0, 12);
     }
@@ -199,7 +199,6 @@ try {
     exit;
   }
 
-  // ---------- 3) Insert NEW param_set (use ONLY normalized vars) ----------
   $ins = $pdo->prepare("
     INSERT INTO param_sets
       (is_calculated, date_calculated, date_last_used,

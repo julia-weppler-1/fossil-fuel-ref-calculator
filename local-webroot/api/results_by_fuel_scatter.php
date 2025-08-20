@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *'); // dev only; lock down in prod
+header('Access-Control-Allow-Origin: *'); 
 
 $dbPath = __DIR__ . '/../data/results.sql3';
 

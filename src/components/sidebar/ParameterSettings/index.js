@@ -17,7 +17,7 @@ export default function ParameterSettings({ onResultReady }) {
     { id: 1, label: "Low Energy Demand Scenario" },
     { id: 2, label: "High Energy Demand Scenario" },
   ];
-  const scalingOptions = ["CSER High Capacity", "off"];
+  const scalingOptions = ["CSER High Capacity", "CSER Medium Progressivity", "off"];
 
   const [open, setOpen] = useState(true);
   const [submitting, setSubmitting] = useState(false);

@@ -4,9 +4,6 @@ header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
 require_once __DIR__ . '/_param_norm_find_shared.php';
-// ↑ Put the common normalization + "find" code you have in param_submit_simple
-//   into this file (or paste the helpers directly here). For brevity, I’ll inline
-//   just the essentials below.
 
 $dbPath = __DIR__ . '/../data/results.sql3';
 
