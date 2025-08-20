@@ -1,2 +1,15 @@
+# This file is informational. Actual deps are in package.json (Node) and composer.json (PHP).
+# Runtimes
+node >= 18
+npm  >= 9
+php  >= 8.1
+# Libraries
 d3
 xlsx
+# PHP extensions (adjust if you use MySQL instead of SQLite)
+ext-json
+ext-mbstring
+ext-curl
+ext-pdo
+ext-pdo_sqlite
+sqlite3 >= 3.35

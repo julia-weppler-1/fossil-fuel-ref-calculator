@@ -7,22 +7,33 @@ export default function DisplaySettings({
   setSelectedCountries,
   labelCountries,
   setLabelCountries,
+  ledChartKind,
+  setLedChartKind,
+  ledYAxisMode,
+  setLedYAxisMode,
 }) {
   const [open, setOpen] = useState(true);
   const [allCountries, setAll] = useState([]);
+
+  // inline search boxes + their cookies
   const [filterText, setFilter] = useState("");
-  const inputRef = useRef();
   const [labelText, setLabel] = useState("");
+
+  // refs for portals
+  const inputRef = useRef();
   const labelRef = useRef();
   const [portalStyle, setPortalStyle] = useState({});
   const [labelPortalStyle, setLabelPortalStyle] = useState({});
+
+  // modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("filter");
+  const [modalMode, setModalMode] = useState("filter"); // 'filter' | 'label'
   const [availableList, setAvailableList] = useState([]);
   const [selectedList, setSelectedList] = useState([]);
-  const [leftSelected, setLeftSelected] = useState([]); // items highlighted in left box
+  const [leftSelected, setLeftSelected] = useState([]); // highlighted in left
   const [pasteInput, setPasteInput] = useState("");
-  // load full list once
+
+  // 1) Load country list once 
   useEffect(() => {
     (async () => {
       const res = await fetch("/LEDPaths.xlsx");
@@ -39,25 +50,24 @@ export default function DisplaySettings({
     })();
   }, []);
 
-  // suggestions memo
+  // Suggestions
   const suggestions = useMemo(() => {
+    const q = filterText.toLowerCase();
     return allCountries
       .filter(
-        (c) =>
-          c.toLowerCase().includes(filterText.toLowerCase()) &&
-          !selectedCountries.includes(c)
+        (c) => c.toLowerCase().includes(q) && !selectedCountries.includes(c)
       )
       .slice(0, 10);
   }, [allCountries, filterText, selectedCountries]);
+
   const labelSuggestions = useMemo(() => {
+    const q = labelText.toLowerCase();
     return allCountries
-      .filter(
-        (c) =>
-          c.toLowerCase().includes(labelText.toLowerCase()) &&
-          !labelCountries.includes(c)
-      )
+      .filter((c) => c.toLowerCase().includes(q) && !labelCountries.includes(c))
       .slice(0, 10);
   }, [allCountries, labelText, labelCountries]);
+
+  // Add/remove chips
   const addCountry = (c) => {
     setSelectedCountries((prev) => [...prev, c]);
     setFilter("");
@@ -72,7 +82,8 @@ export default function DisplaySettings({
   const removeLabel = (c) => {
     setLabelCountries((prev) => prev.filter((x) => x !== c));
   };
-  // portal position
+
+  // Portal positions
   useEffect(() => {
     if (filterText && inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
@@ -85,6 +96,7 @@ export default function DisplaySettings({
       });
     }
   }, [filterText, suggestions]);
+
   useEffect(() => {
     if (labelText && labelRef.current) {
       const rect = labelRef.current.getBoundingClientRect();
@@ -98,6 +110,7 @@ export default function DisplaySettings({
     }
   }, [labelText, labelSuggestions]);
 
+  // Modal helpers
   const openModal = (mode) => {
     const initial = mode === "filter" ? selectedCountries : labelCountries;
     setModalMode(mode);
@@ -109,23 +122,18 @@ export default function DisplaySettings({
   };
   const closeModal = () => setModalOpen(false);
 
-  // move one item from left to right in modal
   const moveSelectedOver = () => {
-    // add all leftSelected into selectedList
     const newSel = Array.from(new Set([...selectedList, ...leftSelected]));
     setSelectedList(newSel);
-    // remove them from availableList
     setAvailableList((av) => av.filter((c) => !leftSelected.includes(c)));
     setLeftSelected([]);
   };
 
-  // remove one from selectedList back to available
   const handleRemove = (c) => {
     setSelectedList((sel) => sel.filter((x) => x !== c));
     setAvailableList((av) => [...av, c].sort((a, b) => a.localeCompare(b)));
   };
 
-  // save modal changes back to parent state
   const saveModal = () => {
     const pasted = pasteInput
       .split(",")
@@ -140,7 +148,6 @@ export default function DisplaySettings({
     closeModal();
   };
 
-  // toggle left selection highlight
   const toggleLeft = (c) =>
     setLeftSelected((ls) =>
       ls.includes(c) ? ls.filter((x) => x !== c) : [...ls, c]
@@ -152,7 +159,7 @@ export default function DisplaySettings({
         className="parameters-header bg-brand text-white px-4 py-2 cursor-pointer select-none flex items-center justify-between"
         onClick={() => setOpen((o) => !o)}
       >
-        <span>Country Filter</span>
+        <span>Display Settings</span>
         <span
           className={`transform transition-transform duration-300 ${
             open ? "" : "-rotate-180"
@@ -165,10 +172,10 @@ export default function DisplaySettings({
       {/* collapse panel */}
       <div
         className={`
-        overflow-hidden transform origin-top
-        transition-transform duration-300
-        ${open ? "scale-y-100" : "scale-y-0"}
-      `}
+          overflow-hidden transform origin-top
+          transition-transform duration-300
+          ${open ? "scale-y-100" : "scale-y-0"}
+        `}
       >
         <div
           className={`
@@ -177,15 +184,18 @@ export default function DisplaySettings({
           `}
         >
           <div className="parameters-container p-4 relative">
-          <div className="flex flex-wrap items-center mb-2">
-            <label className="parameter-name flex-shrink-0">Filter by Country</label>
-            <button
-              className="ml-2 px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
-              onClick={() => openModal("filter")}
-            >
-              Custom set
-            </button>
-          </div>
+            {/* Selected filter chips */}
+            <div className="flex flex-wrap items-center mb-2">
+              <label className="parameter-name flex-shrink-0">
+                Filter by Country
+              </label>
+              <button
+                className="ml-2 px-2 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300"
+                onClick={() => openModal("filter")}
+              >
+                Custom set
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2 mb-2">
               {selectedCountries.map((c) => (
                 <span
@@ -211,7 +221,7 @@ export default function DisplaySettings({
               )}
             </div>
 
-            {/* search */}
+            {/* Search add */}
             <input
               ref={inputRef}
               type="text"
@@ -222,8 +232,6 @@ export default function DisplaySettings({
               value={filterText}
               onChange={(e) => setFilter(e.target.value)}
             />
-
-            {/* portal’d dropdown */}
             {filterText &&
               suggestions.length > 0 &&
               createPortal(
@@ -244,7 +252,8 @@ export default function DisplaySettings({
                 document.body
               )}
 
-            <div>
+            {/* Label chips + search */}
+            <div className="mt-4">
               <div className="flex flex-wrap items-center mb-2">
                 <label className="parameter-name">Label On Chart</label>
                 <button
@@ -309,9 +318,69 @@ export default function DisplaySettings({
                   document.body
                 )}
             </div>
+            <div className="mt-1 flex flex-wrap items-center">
+            <label className="parameter-name">
+                Phaseout Pathway Chart Settings
+              </label>
+              {/* Group 1: chart type */}
+              <div className="flex items-center gap-4">
+                <label className="text-sm flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="ledChartKind"
+                    checked={ledChartKind === "line"}
+                    onChange={() => setLedChartKind("line")}
+                  />
+                  Line
+                </label>
+                <label className="text-sm flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="ledChartKind"
+                    checked={ledChartKind === "stacked"}
+                    onChange={() => setLedChartKind("stacked")}
+                  />
+                  Stacked area
+                </label>
+              </div>
+
+              {/* Divider: horizontal on small screens, vertical on md+ */}
+              <div className="w-full h-px bg-gray-200 my-2 md:hidden" />
+              <div className="hidden md:block h-6 w-px bg-gray-200 mx-3" />
+
+              {/* Group 2: y-axis mode */}
+              <div className="flex items-center gap-4">
+                <label className="text-sm flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="ledYAxisMode"
+                    checked={ledYAxisMode === "absolute"}
+                    onChange={() => setLedYAxisMode("absolute")}
+                  />
+                  Absolute (CO₂ Gt)
+                </label>
+                <label className="text-sm flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="ledYAxisMode"
+                    checked={ledYAxisMode === "relative"}
+                    onChange={() => setLedYAxisMode("relative")}
+                  />
+                  Relative
+                </label>
+
+                {ledChartKind === "stacked" && ledYAxisMode !== "absolute" && (
+                  <span className="text-xs text-gray-500">
+                    ≤ 17 countries shown
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Modal */}
       {modalOpen &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -346,7 +415,7 @@ export default function DisplaySettings({
                   ))}
                 </ul>
 
-                {/* Single arrow button */}
+                {/* Move → */}
                 <div className="flex flex-col justify-center">
                   <button
                     onClick={moveSelectedOver}
@@ -357,7 +426,7 @@ export default function DisplaySettings({
                   </button>
                 </div>
 
-                {/* Right box */}
+                {/* Right box + paste */}
                 <div className="w-1/2">
                   <ul className="max-h-32 overflow-auto border p-2 mb-2">
                     {selectedList.map((c) => (

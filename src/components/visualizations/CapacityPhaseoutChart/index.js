@@ -1,184 +1,194 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
-import * as XLSX from 'xlsx';
-import * as d3   from 'd3';
-import './index.css';
-import Tooltip from '../../common/Tooltip';
+import React, { useEffect, useMemo, useRef } from "react";
+import * as d3 from "d3";
+import "./index.css";
+import Tooltip from "../../common/Tooltip";
+import { useChartDims } from "../../../hooks/useChartDims";
 
 export default function CapacityPhaseoutChart({
-  fuel,
+  fuel,                    // 'oil' | 'coal' | 'gas'
+  rows = [],               // unified dataset from parent (/api/capacity_phaseout.php?fuel=all)
   countries = [],
-  labelCountries = []
+  labelCountries = [],
+  yMax = null,
+  onYMax = null,
 }) {
-  const containerRef = useRef();
-  const svgRef       = useRef();
-  const tooltipRef   = useRef();
+  const { containerRef, dims } = useChartDims(0.875);
+  const svgRef = useRef();
+  const tooltipRef = useRef();
+  const clipId = useRef(`clip-${fuel}-${Math.random().toString(36).slice(2)}`);
 
-  const [dims,      setDims]      = useState({ width: 0, height: 0 });
-  const [data,      setData]      = useState([]);      // merged for fuel
-  const [globalMax, setGlobalMax] = useState(0);       // shared max
-  // 1) Measure container
-  useLayoutEffect(() => {
-    const node = containerRef.current;
-    if (!node) return;
-    const ro = new ResizeObserver(([e]) => {
-      const w = e.contentRect.width,
-            h = w * 0.8;
-      setDims(prev =>
-        prev.width === w && prev.height === h
-          ? prev
-          : { width: w, height: h }
-      );
-    });
-    ro.observe(node);
-    return () => ro.disconnect();
-  }, []);
+  const points = useMemo(() => {
+    const ff = String(fuel || "").toLowerCase();
+    const rowsForFuel = Array.isArray(rows)
+      ? rows.filter(r => (r.fuel || "").toLowerCase() === ff)
+      : [];
 
-  // 2) Load workbook once, compute globalMax & per‑fuel data
-  useEffect(() => {
-    (async () => {
-      const res     = await fetch('/emissions.xlsx');
-      const buf     = await res.arrayBuffer();
-      const wb      = XLSX.read(buf, { type: 'array' });
+    const pts = rowsForFuel.map(r => {
+      const isSupporter =
+        Number(r.is_supporter) === 1 || (!!r.is_supporter && r.is_supporter !== 0);
+      const cap = +r.capacity_pcap || 0;
+      const support = r.support_pct != null ? +r.support_pct : null;
+      const rawYr = r.PhaseoutYr != null ? +r.PhaseoutYr : null;
+      const year = isSupporter ? 2050.25 : (rawYr == null ? null : Math.min(rawYr, 2050));
+      return {
+        country: r.country || r.iso3,
+        iso3: r.iso3,
+        fuel: r.fuel || ff,
+        year,
+        cap,
+        support_pct: support,
+        isSupporter,
+      };
+    }).filter(p => !Number.isNaN(p.cap));
 
-      // global capacity max from sheet2
-      const capRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[1]]);
-      const allCaps = capRows.map(r =>
-        +r.CapacityPerCapita || +r.Capacitypercap || 0
-      );
-      setGlobalMax(d3.max(allCaps));
+    // let parent know a local max (for synchronized y ranges.)
+    const localMax = d3.max(pts, d => d.cap) ?? 0;
+    onYMax?.(Math.ceil(localMax));
+    return pts;
+  }, [rows, fuel, onYMax]);
 
-      // phaseout + merge for this fuel
-      const allPhase  = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[6]]);
-      const phaseRows = allPhase.filter(r => r.Fuel === fuel);
-      const phaseMap  = new Map(
-        phaseRows.map(r => [r.Country, Math.min(r.PhaseoutYr, 2065)])
-      );
+  const filtered = useMemo(() => {
+    return points.filter(d => (countries.length === 0 || countries.includes(d.country)));
+  }, [points, countries]);
 
-      const merged = capRows
-        .map(r => {
-          const year = phaseMap.get(r.Country);
-          const cap  = +r.CapacityPerCapita || +r.Capacitypercap || 0;
-          return year != null && !isNaN(cap)
-            ? { country: r.Country, year, cap }
-            : null;
-        })
-        .filter(Boolean);
-
-      setData(merged);
-    })();
-  }, [fuel]);
-
-  // 3) Draw + zoom
   useEffect(() => {
     const { width, height } = dims;
-    if (!width || !data.length || globalMax == null) return;
+    const svg = d3.select(svgRef.current).attr("width", width).attr("height", height);
+    svg.selectAll("*").remove();
+
+    if (!width || !height) return;
+
+    if (filtered.length === 0) {
+      svg.append("text")
+        .attr("x", width/2).attr("y", height/2)
+        .attr("text-anchor","middle").attr("fill","#6B7280")
+        .attr("font-size","1.25rem").text("No data to display");
+      return;
+    }
 
     const margin = { top: 40, right: 20, bottom: 60, left: 70 };
-    const w = width  - margin.left - margin.right;
-    const h = height - margin.top  - margin.bottom;
-
-    // filter by selected countries
-    const filtered = data.filter(d =>
-      countries.length === 0 || countries.includes(d.country)
-    );
-
-    // base svg
-    const svg = d3.select(svgRef.current)
-      .attr('width',  width)
-      .attr('height', height);
-    svg.selectAll('*').remove();
+    const w = width - margin.left - margin.right;
+    const h = height - margin.top - margin.bottom;
 
     const tooltip = d3.select(tooltipRef.current);
 
-    // scales
-    const x0 = d3.scaleLinear().domain([2030, 2065]).range([0, w]);
-    const y0 = d3.scaleLinear().domain([0, globalMax]).nice().range([h, 0]);
-    const avg = d3.mean(data, d => d.cap);
+    const localMax = (d3.max(filtered, d => d.cap) ?? 0);
+    const maxVal = yMax != null ? yMax : Math.ceil(localMax + 10000);
 
-    // chart group + clip
-    const g = svg.append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-    g.append('defs').append('clipPath').attr('id','clip')
-      .append('rect').attr('width', w).attr('height', h);
+    const x0 = d3.scaleLinear().domain([2030, 2055]).range([0, w]);
+    const y0 = d3.scaleLinear().domain([0, maxVal]).range([h, 0]);
 
-    // axes setup
-    const xAxisG = g.append('g').attr('transform', `translate(0,${h})`);
-    const yAxisG = g.append('g');
-    function drawAxes(xs, ys) {
-      let yt = ys.ticks(6);
-      yt = Array.from(new Set([...yt, 2500, 5000]))
-        .filter(v => v >= ys.domain()[0] && v <= ys.domain()[1])
-        .sort((a,b) => a - b);
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    g.append("defs").append("clipPath").attr("id", clipId.current)
+      .append("rect").attr("x",0).attr("y",0).attr("width",w).attr("height",h);
+    const plot = g.append("g").attr("clip-path", `url(#${clipId.current})`);
 
-      xAxisG.call(d3.axisBottom(xs).ticks(5).tickFormat(d3.format('d')))
-        .call(g => g.selectAll('path,line').attr('stroke','#1F2937'))
-        .call(g => g.selectAll('text').attr('fill','#4B5563'));
-
-      yAxisG.call(d3.axisLeft(ys).tickValues(yt).tickFormat(d3.format(',d')))
-        .call(g => g.selectAll('path,line').attr('stroke','#1F2937'))
-        .call(g => g.selectAll('text').attr('fill','#4B5563'));
-    }
+    // axes
+    const xAxisG = g.append("g").attr("transform", `translate(0,${h})`);
+    const yAxisG = g.append("g");
+    const drawAxes = (xs, ys) => {
+      xAxisG.call(d3.axisBottom(xs).ticks(5).tickFormat(d3.format("d")))
+        .call(g => g.selectAll("path,line").attr("stroke","#1F2937"))
+        .call(g => g.selectAll("text").attr("fill","#4B5563"));
+      yAxisG.call(d3.axisLeft(ys).ticks(6))
+        .call(g => g.selectAll("path,line").attr("stroke","#1F2937"))
+        .call(g => g.selectAll("text").attr("fill","#4B5563"));
+    };
     drawAxes(x0, y0);
 
-    // axis labels
-    g.append('text')
-      .attr('x', w/2).attr('y', h + margin.bottom - 15)
-      .attr('text-anchor','middle').attr('fill','#1F2937')
+    // labels
+    g.append("text")
+      .attr("x", w/2).attr("y", h + margin.bottom - 15)
+      .attr("text-anchor","middle").attr("fill","#1F2937")
       .text(`Phaseout Year (${fuel})`);
-    g.append('text')
-      .attr('transform','rotate(-90)')
-      .attr('x', -h/2).attr('y', -margin.left + 15)
-      .attr('text-anchor','middle').attr('fill','#1F2937')
-      .text('Capacity per Capita');
+    g.append("text")
+      .attr("transform","rotate(-90)")
+      .attr("x", -h/2).attr("y", -margin.left + 15)
+      .attr("text-anchor","middle").attr("fill","#1F2937")
+      .text("Capacity per Capita");
 
-    const plot = g.append('g').attr('clip-path','url(#clip)');
+    // 2050 marker
+    const marker2050 = plot.append("line")
+      .attr("x1", x0(2050)).attr("x2", x0(2050))
+      .attr("y1", y0(0)).attr("y2", y0(maxVal))
+      .attr("stroke", "#D1D5DB").attr("stroke-dasharray", "4 2");
 
-    // average line
-    plot.append('line')
-      .attr('class','avg-line')
-      .attr('x1', 0).attr('x2', w)
-      .attr('y1', y0(avg)).attr('y2', y0(avg))
-      .attr('stroke','#3F6F2A').attr('stroke-width',2)
-      .on('mouseover', () => tooltip.style('opacity',1).html(`Global average: ${avg.toFixed(3)}`))
-      .on('mousemove', e => {
+    // split groups
+    const extractors = filtered.filter(d => !d.isSupporter && d.year != null);
+    const supporters = filtered.filter(d => d.isSupporter);
+
+    // avg line (extractors only)
+    const avg = d3.mean(extractors, d => d.cap);
+    let avgLine = null;
+    if (Number.isFinite(avg)) {
+      avgLine = plot.append("line")
+        .attr("x1", 0).attr("x2", w)
+        .attr("y1", y0(avg)).attr("y2", y0(avg))
+        .attr("stroke","#3F6F2A").attr("stroke-width",2)
+        .on("mouseover", () => tooltip.style("opacity",1).html(`Global average: ${avg.toFixed(3)}`))
+        .on("mousemove", e => {
+          const r = containerRef.current.getBoundingClientRect();
+          tooltip.style("left",`${e.clientX-r.left+10}px`).style("top",`${e.clientY-r.top+10}px`);
+        })
+        .on("mouseout", () => tooltip.style("opacity",0));
+    }
+
+    // colors
+    const COLOR_EXTRACT = "#008BB9";
+    const COLOR_SUPPORT = "#F59E0B";
+
+    // extractors
+    const cExtract = plot.selectAll("circle.extractor")
+      .data(extractors, d => d.iso3)
+      .join("circle")
+      .attr("class","extractor")
+      .attr("cx", d => x0(d.year))
+      .attr("cy", d => y0(d.cap))
+      .attr("r", 4)
+      .attr("fill", COLOR_EXTRACT)
+      .on("mouseover", (e,d) => {
+        tooltip.style("opacity",1).html(
+          `${d.country}<br/>Phaseout: ${d.year}<br/>Capacity/Capita: ${d.cap.toFixed(3)}`
+        );
+      })
+      .on("mousemove", (e) => {
         const r = containerRef.current.getBoundingClientRect();
-        tooltip.style('left',`${e.clientX-r.left+10}px`)
-               .style('top',`${e.clientY-r.top+10}px`);
+        tooltip.style("left",`${e.clientX-r.left+10}px`).style("top",`${e.clientY-r.top+10}px`);
       })
-      .on('mouseout', () => tooltip.style('opacity',0));
+      .on("mouseout", () => tooltip.style("opacity",0));
 
-    // circles
-    const circles = plot.selectAll('circle')
-      .data(filtered)
-      .join('circle')
-      .attr('cx', d => x0(d.year))
-      .attr('cy', d => y0(d.cap))
-      .attr('r', 4)
-      .attr('fill','#008BB9')
-      .on('mouseover', (e,d) => {
-        tooltip.style('opacity',1).html(d.country);
+    // supporters (x = 2050.25)
+    const cSupport = plot.selectAll("circle.supporter")
+      .data(supporters, d => d.iso3)
+      .join("circle")
+      .attr("class","supporter")
+      .attr("cx", () => x0(2050.25))
+      .attr("cy", d => y0(d.cap))
+      .attr("r", 4)
+      .attr("fill", COLOR_SUPPORT)
+      .on("mouseover", (e,d) => {
+        const pct = d.support_pct != null ? `${(d.support_pct*100).toFixed(1)}%` : "—";
+        tooltip.style("opacity",1).html(
+          `Supporter (non-extracting)<br/>${d.country}<br/>Support: ${pct}<br/>Cap/Cap: ${d.cap.toFixed(3)}`
+        );
       })
-      .on('mousemove', e => {
+      .on("mousemove", (e) => {
         const r = containerRef.current.getBoundingClientRect();
-        tooltip.style('left',`${e.clientX-r.left+10}px`)
-               .style('top',`${e.clientY-r.top+10}px`);
+        tooltip.style("left",`${e.clientX-r.left+10}px`).style("top",`${e.clientY-r.top+10}px`);
       })
-      .on('mouseout', () => tooltip.style('opacity',0));
+      .on("mouseout", () => tooltip.style("opacity",0));
 
-    // country labels
-    const labels = plot.selectAll('text.country-label')
-      .data(filtered.filter(d => labelCountries.includes(d.country)), d => d.country);
-
-    labels.exit().remove();
-
-    labels.enter().append('text')
-      .attr('class','country-label')
-      .attr('font-size','0.75rem')
-      .attr('fill','#333')
-      .attr('pointer-events','none')
-    .merge(labels)
-      .attr('x', d => x0(d.year) + 6)
-      .attr('y', d => y0(d.cap)  - 6)
+    // labels (only chosen countries)
+    const toLabel = filtered.filter(d => labelCountries.includes(d.country));
+    plot.selectAll("text.country-label")
+      .data(toLabel, d => d.iso3)
+      .join("text")
+      .attr("class","country-label")
+      .attr("font-size","0.75rem")
+      .attr("fill","#333")
+      .attr("pointer-events","none")
+      .attr("x", d => x0(d.isSupporter ? 2050.25 : d.year) + 6)
+      .attr("y", d => y0(d.cap) - 6)
       .text(d => d.country);
 
     // zoom
@@ -186,48 +196,34 @@ export default function CapacityPhaseoutChart({
       .scaleExtent([1,8])
       .translateExtent([[0,0],[w,h]])
       .extent([[0,0],[w,h]])
-      .on('zoom', ({transform}) => {
+      .on("zoom", ({transform}) => {
         const zx = transform.rescaleX(x0);
         const zy = transform.rescaleY(y0);
-
         drawAxes(zx, zy);
+        marker2050
+          .attr("x1", zx(2050)).attr("x2", zx(2050))
+          .attr("y1", zy(0)).attr("y2", zy(maxVal));
+        if (avgLine) avgLine.attr("y1", zy(avg)).attr("y2", zy(avg));
 
-        circles
-          .attr('cx', d => zx(d.year))
-          .attr('cy', d => zy(d.cap));
-
-        plot.select('.avg-line')
-          .attr('y1', zy(avg))
-          .attr('y2', zy(avg));
-
-        // **reposition labels on zoom**
-        plot.selectAll('text.country-label')
-          .attr('x', d => zx(d.year) + 6)
-          .attr('y', d => zy(d.cap)  - 6);
+        cExtract.attr("cx", d => zx(d.year)).attr("cy", d => zy(d.cap));
+        cSupport.attr("cx", () => zx(2050.25)).attr("cy", d => zy(d.cap));
+        plot.selectAll("text.country-label")
+          .attr("x", d => zx(d.isSupporter ? 2050.25 : d.year) + 6)
+          .attr("y", d => zy(d.cap) - 6);
       });
 
-    // transparent zoom overlay (behind everything)
-    svg.append('rect')
-      .attr('width',  width)
-      .attr('height', height)
-      .style('fill','none')
-      .style('pointer-events','all')
-      .call(zoom)
-      .lower();
+    // invisible overlay for zoom (below)
+    svg.append("rect")
+      .attr("width", width).attr("height", height)
+      .style("fill","none").style("pointer-events","all")
+      .call(zoom).lower();
 
-  }, [dims, data, fuel, countries, labelCountries, globalMax]);
+  }, [filtered, dims, fuel, labelCountries, yMax]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position:'relative',
-        width:  '100%',
-        height: `${dims.height}px`
-      }}
-    >
-      <svg ref={svgRef} style={{ width:'100%' }} />
-      <Tooltip ref={tooltipRef}/>
+    <div ref={containerRef} style={{ position: "relative", width: "100%", height: `${dims.height}px` }}>
+      <svg ref={svgRef} style={{ width: "100%", height: "100%" }} />
+      <Tooltip ref={tooltipRef} />
     </div>
   );
 }
